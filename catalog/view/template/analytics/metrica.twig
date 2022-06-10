@@ -1,0 +1,64 @@
+{% if (yandex_metrica_status is not empty) and (yandex_metrica_status == 1) %} 
+    <!-- Yandex.Metrica counters -->
+    {% if yandex_metrics is not empty %}
+        <script>
+        window.dataLayer = window.dataLayer || [];
+
+        {% if data_layer %}
+            dataLayer.push({{ data_layer }});
+        {% endif %}
+
+        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+        (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+        {% for metrica in yandex_metrics %}
+            ym({{ metrica.code }}, "init", {
+                clickmap:true,
+                trackLinks:true,
+                accurateTrackBounce:true,
+                webvisor:{{ metrica.ya_metrica_webvizor }},
+                ecommerce:"dataLayer",
+                params: { __ym: {"ymCmsPlugin": { "cms": "opencart", "cmsVersion":"{{ cms_version }}", "pluginVersion":"1.1.8"}}}
+            });
+        {% endfor %}
+        </script>
+        <noscript>
+            <div>
+                {% for metrica in yandex_metrics %}
+                <img src="https://mc.yandex.ru/watch/{{ metrica.code }}" style="position:absolute; left:-9999px;" alt="" />
+                {% endfor %}
+            </div>
+        </noscript>
+    {% endif %}
+
+    <script>
+    function sendDataForEcommerceYandexMetrica(options) {
+        let id = options.id; // required
+        let event = options.event; // required
+        let id_type = (typeof(options.id_type) != 'undefined' ? options.id_type : 'product_id');
+        let quantity = (typeof(options.quantity) != 'undefined' ? options.quantity : 'null');
+        let async = (typeof(options.async) != 'undefined' ? options.async : true);
+
+        $.ajax({
+        url: 'index.php?route=extension/yandex/analytics/metrica|getProductDataForYandexMetrica',
+        async: (typeof(async) != 'undefined' ? async : true),
+        type: 'post',
+        data: 'id=' + id + '&event=' + event + '&id_type=' + id_type + '&quantity=' + quantity,
+        //dataType: 'json',
+        success: function(json) {
+            console.log(json);
+            if (event == 'add') {
+            dataLayer.push({"ecommerce": {"currencyCode": json['currency_code'], "add": {"products": [json['product']]}}});
+            } else if (event == 'remove') {
+            dataLayer.push({"ecommerce": {"currencyCode": json['currency_code'], "remove": {"products": [json['product']]}}});
+            }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+            alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+        });
+    }
+    </script>
+    <!-- /Yandex.Metrica counters -->
+{% endif %}

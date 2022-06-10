@@ -1,0 +1,228 @@
+{{ header }}{{ column_left }}
+<div id="content">
+	<div class="page-header">
+		<div class="container-fluid">
+			<div class="float-end">
+				<button type="submit" form="form-analytics" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary">
+					<i class="fas fa-save"></i>
+				</button>
+				<a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light">
+					<i class="fas fa-reply"></i>
+				</a>
+			</div>
+			<h1>{{ heading_title }}</h1>
+			<ol class="breadcrumb">
+				{% for breadcrumb in breadcrumbs %}
+					<li class="breadcrumb-item">
+						<a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+					</li>
+				{% endfor %}
+			</ol>
+		</div>
+	</div>
+	<div class="container-fluid">
+		{% if error_warning %}
+			<div class="alert alert-danger alert-dismissible">
+				<i class="fas fa-exclamation-circle"></i>
+				{{ error_warning }}
+				<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+			</div>
+		{% endif %}
+		<div class="card">
+			<div class="card-header">
+				<i class="fas fa-pencil-alt"></i>
+				{{ text_edit }}</div>
+			<div class="card-body">
+				<a href="https://metrika.yandex.ru/" target="_blank">
+					<img src="{{ logo }}" alt="{{ heading_title }}" title="{{ heading_title }}" class="mx-auto d-block mb-3" style="width:150px;"/>
+				</a>
+				<form id="form-analytics" action="{{ save }}" method="post" data-oc-toggle="ajax">
+					<ul class="nav nav-tabs">
+						<li class="nav-item">
+							<a href="#tab-general" data-bs-toggle="tab" class="nav-link {% if has_settings %} active {% endif %}">{{ tab_metrics }}</a>
+						</li>
+						<li class="nav-item">
+							<a href="#tab-search" data-bs-toggle="tab" class="nav-link">{{ tab_metric_search }}</a>
+						</li>
+						<li class="nav-item">
+							<a href="#tab-log" data-bs-toggle="tab" class="nav-link">{{ tab_logging }}</a>
+						</li>
+						<li class="nav-item">
+							<a href="#tab-info" data-bs-toggle="tab" class="nav-link {% if not has_settings %} active {% endif %}">{{ tab_info }}</a>
+						</li>
+					</ul>
+					<div class="tab-content">
+						<div id="tab-general" class="tab-pane {% if has_settings %} active {% endif %}">
+							{% if notify_module_version %}
+								<div class="alert alert-warning alert-dismissible" role="alert">
+									<i class="fa fa-info-circle"></i>
+									{{ notify_module_version }}
+									<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+								</div>
+							{% endif %}
+							<div class="row mb-3">
+								<label for="input-status" class="col-sm-2 col-form-label">{{ entry_status }}</label>
+								<div class="col-sm-10">
+								<select name="analytics_metrica_status" id="input-status" class="form-select">
+									<option value="1"{% if analytics_metrica_status %} selected="selected"{% endif %}>{{ text_enabled }}</option>
+									<option value="0"{% if not analytics_metrica_status %} selected="selected"{% endif %}>{{ text_disabled }}</option>
+								</select>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-2 col-form-label">{{ text_debug }}</label>
+								<div class="col-sm-10">
+									<div class="form-check form-switch form-switch-lg">
+										<input type="checkbox" name="analytics_metrica_debug" value="1" id="input-approval" class="form-check-input" {% if analytics_metrica_debug %} checked {% endif %}>
+									</div>
+								</div>
+							</div>
+							<fieldset id="option-value">
+								<legend>{{ entry_metrics_list }}</legend>
+								<div class="table-responsive">
+									<table id="metrics" class="table table-bordered table-hover">
+										<thead>
+											<tr>
+												<td class="text-start">{{ column_metric_code }}</td>
+												<td class="text-start">{{ column_settings }}</td>
+												<td class="text-end">{{ column_action }}</td>
+											</tr>
+										</thead>
+										<tbody>
+											{% for metrica in analytics_metrica_codes %}
+												<tr id="metrica-row{{ loop.index0 }}">
+													<td class="text-left">
+														<input type="text" name="analytics_metrica_codes[{{ loop.index0 }}][code]" value="{{ metrica.code }}" placeholder="{{ column_metric_code }}" class="form-control"/>
+                            							<div id="error-metrica-{{ loop.index0 }}-code" class="invalid-feedback"></div>
+													</td>
+													<td class="text-left" style="width: 30%;">
+														<div class="form-check">
+															<input class="form-check-input" type="checkbox" name="analytics_metrica_codes[{{ loop.index0 }}][ya_metrica_webvizor]" value="1" id="ya-metrica-webvizor-{{ loop.index0 }}" {% if metrica.ya_metrica_webvizor %}checked {% endif %}>
+															<label class="form-check-label" for="ya-metrica-webvizor-{{ loop.index0 }}">{{ entry_webvisor }}</label>
+														</div>
+													</td>
+													<td class="text-end">
+														<button type="button" onclick="$('#metrica-row{{ loop.index0 }}').remove();" data-bs-toggle="tooltip" title="{{ button_remove }}" class="btn btn-danger">
+															<i class="fas fa-minus-circle"></i>
+														</button>
+													</td>
+												</tr>
+											{% endfor %}
+										</tbody>
+										<tfoot>
+											<tr>
+												<td colspan="2"></td>
+												<td class="text-end">
+													<button type="button" onclick="addmetrica();" data-bs-toggle="tooltip" title="{{ button_banner_add }}" class="btn btn-primary">
+														<i class="fas fa-plus-circle"></i>
+													</button>
+												</td>
+											</tr>
+										</tfoot>
+									</table>
+								</div>
+							</fieldset>
+						</div>
+						<div id="tab-search" class="tab-pane">
+							<textarea id="search-metrica-status" wrap="off" rows="15" id="input-log" class="form-control" readonly></textarea>
+							<br>
+							<div class="row mb-3">
+								<div class="text-center">
+									<button type="button" id="button-search-metrica" data-bs-loading-text="{{ text_loading }}" class="btn btn-primary">
+										<i class="fa fa-arrow-search"></i>
+										{{ text_find_metric }}</button>
+								</div>
+							</div>
+						</div>
+						<div id="tab-log" class="tab-pane">
+							<div class="row mb-3">
+								<label class="col-sm-2 col-form-label">{{ text_write_logs }}</label>
+								<div class="col-sm-10">
+									<div class="form-check form-switch form-switch-lg">
+										<input type="checkbox" name="analytics_metrica_log" value="1" id="input-approval" class="form-check-input" {% if analytics_metrica_log %} checked {% endif %}>
+									</div>
+								</div>
+							</div>
+							<fieldset>
+								<legend>
+									<i class="fas fa-exclamation-triangle"></i>
+									{{ text_logs }}</legend>
+								<textarea wrap="off" rows="15" readonly class="form-control">{{ log }}</textarea>
+							</fieldset>
+						</div>
+						<div id="tab-info" class="tab-pane {% if not has_settings %} active {% endif %}">
+							<div class="text-left">
+								{{ text_instructions }}
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+var metrica_row = {{ analytics_metrica_codes| length }};
+
+function addmetrica() {
+	html = '<tr id="metrica-row' + metrica_row + '">';
+	html += '	<td class="text-left">';
+	html += '		<input type="text" name="analytics_metrica_codes[' + metrica_row + '][code]" value="{{ metrica.code }}" placeholder="{{ column_metric_code }}" class="form-control"/>';
+	html += '		<div id="error-metrica-' + metrica_row + '-code" class="invalid-feedback"></div>';
+	html += '	</td>';
+	html += '	<td class="text-left" style="width: 30%;">';
+	html += '		<div class="form-check">';
+	html += '			<input class="form-check-input" type="checkbox" name="analytics_metrica_codes[' + metrica_row + '][ya_metrica_webvizor]" value="" id="ya-metrica-webvizor-' + metrica_row + '" {% if metrica.ya_metrica_webvizor %}checked {% endif %}>';
+	html += '			<label class="form-check-label" for="ya-metrica-webvizor-' + metrica_row + '">{{ entry_webvisor }}</label>';
+	html += '		</div>';
+	html += '	</td>';
+	html += '	<td class="text-end">';
+	html += '		<button type="button" onclick="$(\'#metrica-row' + metrica_row + '\').remove();" data-bs-toggle="tooltip" title="{{ button_remove }}" class="btn btn-danger">';
+	html += '			<i class="fas fa-minus-circle"></i>';
+	html += '		</button>';
+	html += '	</td>';
+	html += '</tr>';
+
+    $('#metrics tbody').append(html);
+
+    ++metrica_row;
+}
+
+$('#button-search-metrica').on('click', function () {
+    $.ajax({
+        url: '{{ find_ya_metrica }}',
+        dataType: 'json',
+        beforeSend: function () {
+            $('#search-metrica-status').val('');
+            $('#search-metrica-status').val('{{ text_start_of_search_metric }}');
+            result = $('#search-metrica-status').val();
+        },
+        complete: function () {
+            result += "\n{{ text_end_of_search_metric }}";
+            $('#search-metrica-status').val(result);
+        },
+        success: function (json) {
+            console.log(json);
+            if (json.count_of_metrik == 0) {
+                result += "\n{{ text_metrics_not_found }}";
+            } else {
+                result += "\n{{ text_metrics_found }}:";
+                result += printMetrikCodes(json.codes_metrik);
+            }
+            $('#search-metrica-status').val(result);
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+    });
+});
+
+function printMetrikCodes(codes) {
+    str = '';
+    for (var i = 0; i < codes.length; i++) {
+        str += "\n   {{ text_counter_number }}: " + codes[i] + ";";
+    }
+    return str;
+}
+</script>
+{{ footer }}
